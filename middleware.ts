@@ -1,6 +1,7 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
+//commit1: Middleware to protect the admin dashboard and ensure only authenticated users can access it
 
 export default withAuth(
   function middleware(request) {

@@ -1,3 +1,5 @@
+//commit1: TypeScript definitions for NextAuth to extend session and user types
+     // Admin path protection
 import NextAuth from "next-auth";
 
 declare module "next-auth" {

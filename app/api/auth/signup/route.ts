@@ -1,4 +1,6 @@
 // app/api/auth/signup/route.ts
+//commit1: API route for user signup
+// This file handles user registration and creates a new user in the database
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hash } from 'bcryptjs';

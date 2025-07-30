@@ -1,3 +1,5 @@
+// auth.config.ts
+//commit1: Configuration for NextAuth authentication
 import type { NextAuthConfig } from "next-auth";
 
 export const authConfig = {

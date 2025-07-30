@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { formatTime } from '@/lib/utils';
 import RegisterModal from '@/components/RegisterModal';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 import { QrCodeIcon } from '@heroicons/react/24/outline';
@@ -28,11 +28,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-
+import { formatTime } from '@/lib/utils';
 
 const QrScanner = dynamic(() => import('@/components/QrScanner'), { ssr: false });
 
 export default function Page() {
+  // Data state
   const [registers, setRegisters] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -40,11 +41,30 @@ export default function Page() {
   const [scannedUserId, setScannedUserId] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(7);
+  const [itemsPerPage] = useState(5);
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: 'ascending' | 'descending';
   } | null>(null);
+
+  // Column visibility with checkboxes
+  const [columnVisibility, setColumnVisibility] = useState({
+    name: true,
+    userId: true,
+    department: true,
+    laptopBrand: true,
+    inTime: true,
+    outTime: true,
+  });
+
+  const columns = [
+    { id: 'name', label: 'Name' },
+    { id: 'userId', label: 'User ID' },
+    { id: 'department', label: 'Department' },
+    { id: 'laptopBrand', label: 'Laptop Brand' },
+    { id: 'inTime', label: 'Check-In' },
+    { id: 'outTime', label: 'Check-Out' },
+  ];
 
   useEffect(() => {
     reload();
@@ -131,12 +151,12 @@ export default function Page() {
 
   const getSortIcon = (key: string) => {
     if (!sortConfig || sortConfig.key !== key) {
-      return <ArrowUpDown className="ml-2 h-4 w-4 text-amber-600 dark:text-gray-400" />;
+      return <ArrowUpDown className="ml-2 h-4 w-4" />;
     }
     return sortConfig.direction === 'ascending' ? (
-      <ArrowUpDown className="ml-2 h-4 w-4 rotate-180 text-amber-600 dark:text-gray-400" />
+      <ArrowUpDown className="ml-2 h-4 w-4 rotate-180" />
     ) : (
-      <ArrowUpDown className="ml-2 h-4 w-4 text-amber-600 dark:text-gray-400" />
+      <ArrowUpDown className="ml-2 h-4 w-4" />
     );
   };
 
@@ -147,23 +167,25 @@ export default function Page() {
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
+  const visibleColumnsCount = Object.values(columnVisibility).filter(Boolean).length;
+
   return (
-     <div className="min-h-screen flex flex-col bg-white dark:bg-black">
+    <div className="min-h-screen flex flex-col">
       <Header onOpenRegister={() => setShowModal(true)} />
 
       <RegisterModal show={showModal} onClose={() => setShowModal(false)} onRegistered={reload} />
 
       <main className="flex-1 p-4">
-        {/* Centered filter bar */}
-        <div className="flex justify-center mb-6">
-          <div className="relative w-full max-w-md">
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          {/* Search Filter */}
+          <div className="relative flex-1 max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-amber-500 dark:text-gray-400" />
+              <Search className="h-5 w-5 text-gray-400" />
             </div>
             <Input
               type="text"
               placeholder="Filter records..."
-              className="pl-10 pr-10 border-amber-300 bg-white focus:ring-amber-500 focus:border-amber-500 text-amber-900 dark:border-gray-600 dark:bg-black dark:text-gray-300 dark:focus:ring-gray-500 dark:focus:border-gray-500"
+              className="pl-10 pr-10"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -175,112 +197,143 @@ export default function Page() {
                 onClick={() => setSearch("")}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
               >
-                <X className="h-5 w-5 text-amber-500 hover:text-amber-700 dark:text-gray-400 dark:hover:text-gray-300" />
+                <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
               </button>
             )}
           </div>
+
+          {/* Column Visibility Checkboxes */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 bg-white p-3 rounded-md border shadow-sm">
+            {columns.map((column) => (
+              <div key={column.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={column.id}
+                  checked={columnVisibility[column.id as keyof typeof columnVisibility]}
+                  onCheckedChange={(checked) =>
+                    setColumnVisibility({ ...columnVisibility, [column.id]: checked })
+                  }
+                />
+                <label htmlFor={column.id} className="text-sm font-medium leading-none">
+                  {column.label}
+                </label>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="rounded-lg border border-amber-200 dark:border-gray-700 shadow-sm overflow-hidden bg-white dark:bg-black mx-4 sm:mx-8 md:mx-12 lg:mx-16 xl:mx-20">
+        {/* Table */}
+        <div className="rounded-lg border shadow-lg overflow-hidden bg-white">
           <Table>
-            <TableHeader className="bg-amber-50 dark:bg-gray-900">
+            <TableHeader className="bg-gray-50">
               <TableRow>
-                <TableHead className="text-amber-900 dark:text-gray-100">
-                  <Button
-                    variant="ghost"
-                    onClick={() => requestSort('name')}
-                    className="p-0 hover:bg-amber-200 dark:hover:bg-gray-500 font-semibold text-amber-900 dark:text-gray-100"
-                  >
-                    Name
-                    {getSortIcon('name')}
-                  </Button>
-                </TableHead>
-                <TableHead className="text-amber-900 dark:text-gray-100">
-                  <Button
-                    variant="ghost"
-                    onClick={() => requestSort('userId')}
-                    className="p-0 hover:bg-amber-200 dark:hover:bg-gray-500 font-semibold text-amber-900 dark:text-gray-100"
-                  >
-                    User ID
-                    {getSortIcon('userId')}
-                  </Button>
-                </TableHead>
-                <TableHead className="text-amber-900 dark:text-gray-100">
-                  <Button
-                    variant="ghost"
-                    onClick={() => requestSort('department')}
-                    className="p-0 hover:bg-amber-200 dark:hover:bg-gray-500 font-semibold text-amber-900 dark:text-gray-100"
-                  >
-                    Department
-                    {getSortIcon('department')}
-                  </Button>
-                </TableHead>
-                <TableHead className="text-amber-900 dark:text-gray-100">
-                  <Button
-                    variant="ghost"
-                    onClick={() => requestSort('laptopBrand')}
-                    className="p-0 hover:bg-amber-200 dark:hover:bg-gray-500 font-semibold text-amber-900 dark:text-gray-100"
-                  >
-                    Laptop Brand
-                    {getSortIcon('laptopBrand')}
-                  </Button>
-                </TableHead>
-                <TableHead className="text-amber-900 dark:text-gray-100">
-                  <Button
-                    variant="ghost"
-                    onClick={() => requestSort('inTime')}
-                    className="p-0 hover:bg-amber-200 dark:hover:bg-gray-500 font-semibold text-amber-900 dark:text-gray-100"
-                  >
-                    Check-In
-                    {getSortIcon('inTime')}
-                  </Button>
-                </TableHead>
-                <TableHead className="text-amber-900 dark:text-gray-100">
-                  <Button
-                    variant="ghost"
-                    onClick={() => requestSort('outTime')}
-                    className="p-0 hover:bg-amber-200 dark:hover:bg-gray-500 font-semibold text-amber-900 dark:text-gray-100"
-                  >
-                    Check-Out
-                    {getSortIcon('outTime')}
-                  </Button>
-                </TableHead>
-                <TableHead className="w-40 font-semibold text-amber-900 dark:text-gray-100">Actions</TableHead>
+                {columnVisibility.name && (
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => requestSort('name')}
+                      className="p-0 hover:bg-transparent font-semibold"
+                    >
+                      Name
+                      {getSortIcon('name')}
+                    </Button>
+                  </TableHead>
+                )}
+                {columnVisibility.userId && (
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => requestSort('userId')}
+                      className="p-0 hover:bg-transparent font-semibold"
+                    >
+                      User ID
+                      {getSortIcon('userId')}
+                    </Button>
+                  </TableHead>
+                )}
+                {columnVisibility.department && (
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => requestSort('department')}
+                      className="p-0 hover:bg-transparent font-semibold"
+                    >
+                      Department
+                      {getSortIcon('department')}
+                    </Button>
+                  </TableHead>
+                )}
+                {columnVisibility.laptopBrand && (
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => requestSort('laptopBrand')}
+                      className="p-0 hover:bg-transparent font-semibold"
+                    >
+                      Laptop Brand
+                      {getSortIcon('laptopBrand')}
+                    </Button>
+                  </TableHead>
+                )}
+                {columnVisibility.inTime && (
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => requestSort('inTime')}
+                      className="p-0 hover:bg-transparent font-semibold"
+                    >
+                      Check-In
+                      {getSortIcon('inTime')}
+                    </Button>
+                  </TableHead>
+                )}
+                {columnVisibility.outTime && (
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => requestSort('outTime')}
+                      className="p-0 hover:bg-transparent font-semibold"
+                    >
+                      Check-Out
+                      {getSortIcon('outTime')}
+                    </Button>
+                  </TableHead>
+                )}
+                <TableHead className="w-40 font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-amber-600 dark:text-gray-500" />
+                  <TableCell colSpan={visibleColumnsCount + 1} className="h-24 text-center">
+                    <Loader2 className="mx-auto h-8 w-8 animate-spin" />
                   </TableCell>
                 </TableRow>
               ) : currentItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center text-amber-800 dark:text-gray-300">
+                  <TableCell colSpan={visibleColumnsCount + 1} className="h-24 text-center">
                     No records found
                   </TableCell>
                 </TableRow>
               ) : (
                 currentItems.map((r, i) => (
-                  <TableRow key={i} className="hover:bg-amber-50 dark:hover:bg-gray-900 border-b border-amber-200 dark:border-gray-700">
-                    <TableCell className="text-amber-900 dark:text-gray-100">{r.name}</TableCell>
-                    <TableCell className="text-amber-800 dark:text-gray-300">{r.userId}</TableCell>
-                    <TableCell className="text-amber-800 dark:text-gray-300">{r.department || 'General'}</TableCell>
-                    <TableCell className="text-amber-800 dark:text-gray-300">{r.laptopBrand || '-'}</TableCell>
-                    <TableCell className="whitespace-nowrap text-amber-800 dark:text-gray-300">{formatTime(r.inTime)}</TableCell>
-                    <TableCell className="whitespace-nowrap text-amber-800 dark:text-gray-300">{formatTime(r.outTime)}</TableCell>
+                  <TableRow key={i} className="hover:bg-gray-50">
+                    {columnVisibility.name && <TableCell>{r.name}</TableCell>}
+                    {columnVisibility.userId && <TableCell>{r.userId}</TableCell>}
+                    {columnVisibility.department && <TableCell>{r.department || 'General'}</TableCell>}
+                    {columnVisibility.laptopBrand && <TableCell>{r.laptopBrand || '-'}</TableCell>}
+                    {columnVisibility.inTime && <TableCell className="whitespace-nowrap">{formatTime(r.inTime)}</TableCell>}
+                    {columnVisibility.outTime && <TableCell className="whitespace-nowrap">{formatTime(r.outTime)}</TableCell>}
                     <TableCell className="space-x-1">
                       <Button
                         onClick={() => handleCheck(r.userId, 'in')}
-                        className='bg-white hover:bg-amber-200 text-amber-700 border-amber-300 border-2 dark:bg-gray-100 dark:hover:bg-gray-500 dark:text-gray-700 dark:border-gray-500'
+                        className='bg-orange-300 hover:bg-orange-400 text-white'
                         size="sm"
                       >
                         In
                       </Button>
                       <Button
                         onClick={() => handleCheck(r.userId, 'out')}
-                        className='bg-white hover:bg-amber-200 text-amber-700 border-amber-300 border-2 dark:bg-gray-100 dark:hover:bg-gray-500 dark:text-gray-700 dark:border-gray-500'
+                        className='bg-gray-500 hover:bg-gray-600 text-white'
                         size="sm"
                       >
                         Out
@@ -293,7 +346,7 @@ export default function Page() {
           </Table>
         </div>
 
-
+        {/* Pagination */}
         {!loading && sortedData().length > 0 && (
           <div className="mt-4 flex justify-center">
             <Pagination>
@@ -301,7 +354,7 @@ export default function Page() {
                 <PaginationItem>
                   <PaginationPrevious 
                     onClick={() => currentPage > 1 && paginate(currentPage - 1)}
-                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer text-amber-800 hover:bg-amber-100 dark:text-gray-500 dark:hover:bg-gray-600"}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
                 
@@ -322,11 +375,7 @@ export default function Page() {
                       <PaginationLink
                         onClick={() => paginate(pageNumber)}
                         isActive={pageNumber === currentPage}
-                        className={`cursor-pointer ${
-                          pageNumber === currentPage 
-                            ? 'bg-amber-700 text-white hover:bg-amber-800 dark:bg-gray-600 dark:hover:bg-gray-500' 
-                            : 'text-amber-800 hover:bg-amber-100 dark:text-gray-500 dark:hover:bg-gray-600'
-                        }`}
+                        className="cursor-pointer"
                       >
                         {pageNumber}
                       </PaginationLink>
@@ -337,7 +386,7 @@ export default function Page() {
                 <PaginationItem>
                   <PaginationNext 
                     onClick={() => currentPage < totalPages && paginate(currentPage + 1)}
-                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer text-amber-800 hover:bg-amber-100 dark:text-gray-700 dark:hover:bg-gray-600"}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
               </PaginationContent>
@@ -346,42 +395,44 @@ export default function Page() {
         )}
       </main>
 
+      {/* QR Scanner Button */}
       <div className="fixed bottom-6 right-6 group">
         <button
           onClick={() => setScannerOpen(!scannerOpen)}
-          className="bg-amber-700 hover:bg-amber-800 text-white p-3 rounded-full shadow-lg transition-all hover:scale-105 dark:bg-gray-600 dark:hover:bg-gray-500"
+          className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all hover:scale-105"
         >
           <QrCodeIcon className="h-6 w-6" />
         </button>
-        <div className="absolute bottom-full right-0 mb-2 w-48 bg-amber-800 text-white text-sm p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none dark:bg-gray-600">
+        <div className="absolute bottom-full right-0 mb-2 w-48 bg-gray-800 text-white text-sm p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
           <p>🔍 Scan a <strong>User ID QR</strong></p>
           <p>📱 Point camera at QR code</p>
           <p>✅ Auto-check-in on scan</p>
         </div>
       </div>
 
+      {/* QR Scanner Modal */}
       {scannerOpen && (
-        <div className="fixed bottom-24 right-6 w-[330px] bg-amber-50 border border-amber-200 rounded-lg shadow-lg p-4 z-50 dark:bg-gray-700 dark:border-gray-600">
-          <h3 className="text-lg font-semibold mb-2 text-amber-900 dark:text-gray-100">QR Scanner</h3>
+        <div className="fixed bottom-24 right-6 w-[330px] bg-white border rounded-lg shadow-lg p-4 z-50 dark:bg-gray-800 dark:border-gray-700">
+          <h3 className="text-lg font-semibold mb-2">QR Scanner</h3>
           <QrScanner
             onScanSuccess={handleScanSuccess}
             onClose={() => setScannerOpen(false)}
           />
           {scannedUserId && (
-            <div className="mt-3 space-y-2 text-sm text-amber-800 dark:text-gray-300">
-              <p>Scanned ID: <strong className="text-amber-900 dark:text-gray-100">{scannedUserId}</strong></p>
+            <div className="mt-3 space-y-2 text-sm">
+              <p>Scanned ID: <strong>{scannedUserId}</strong></p>
               <div className="flex gap-2">
                 <Button 
                   onClick={() => handleCheck(scannedUserId, 'in')} 
                   size="sm" 
-                  className="bg-amber-700 hover:bg-amber-800 text-white dark:bg-gray-600 dark:hover:bg-gray-500"
+                  className="bg-orange-500 text-white"
                 >
                   Check-In
                 </Button>
                 <Button 
                   onClick={() => handleCheck(scannedUserId, 'out')} 
                   size="sm" 
-                  className="bg-amber-600 hover:bg-amber-700 text-white dark:bg-gray-500 dark:hover:bg-gray-400"
+                  className="bg-gray-600 text-white"
                 >
                   Check-Out
                 </Button>
@@ -391,7 +442,7 @@ export default function Page() {
         </div>
       )}
 
-      <Footer />
+      <Footer className="border-t-2 border-gray-200" />
     </div>
   );
 }

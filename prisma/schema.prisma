@@ -5,15 +5,80 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+   pool {
+    max_connections = 20
+    connection_timeout = 60
+  }
 }
+
 
 model Register {
   id          String   @id @default(cuid())
   name        String
   userId      String   @unique
   laptopBrand String
-  inTime      DateTime @default(now())
+  department  String? @default("General")
+  inTime      DateTime?
   outTime     DateTime?
-  
 }
 
+model User {
+ 
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String?
+  name      String?
+  emailVerified DateTime?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+  attendances Attendance[]
+}
+
+model Attendance {
+  id       String   @id @default(uuid())
+  checkIn  DateTime
+  checkOut DateTime?
+  user     User     @relation(fields: [userId], references: [id])
+  userId   String
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires      DateTime
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}

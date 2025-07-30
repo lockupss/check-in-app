@@ -1,2 +1,19 @@
 import { PrismaClient } from '@prisma/client';
-export const prisma = new PrismaClient();
+
+// Prevent multiple instances of Prisma Client in development
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: PrismaClient | undefined;
+}
+
+const prisma = global.prisma || new PrismaClient();
+
+if (process.env.NODE_ENV !== 'production') {
+  global.prisma = prisma;
+}
+
+// Named export
+export { prisma };
+
+// Default export (for compatibility)
+export default prisma;

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
@@ -26,6 +26,7 @@ export default function RegisterModal({ show, onClose, onRegistered }: any) {
     name: z.string().min(2, "Name must be at least 2 characters"),
     userId: z.string().min(2, "User ID is required"),
     laptopBrand: z.string().min(2, "Laptop brand is required"),
+    department: z.string().min(2, "Department is required"),
   });
 
   type RegisterFormValues = z.infer<typeof RegisterSchema>;
@@ -36,6 +37,7 @@ export default function RegisterModal({ show, onClose, onRegistered }: any) {
       name: "",
       userId: "",
       laptopBrand: "",
+      department: "General",
     },
   });
 
@@ -49,34 +51,37 @@ export default function RegisterModal({ show, onClose, onRegistered }: any) {
 
       if (!res.ok) {
         const body = await res.json();
-        setErrorMessage(body?.message || "Something went wrong while registering. Maybe userId already exists");
+        const msg = body?.message || "Something went wrong while registering. Maybe userId already exists";
+        setErrorMessage(msg);
+        toast.error(`❌ Registration failed: ${msg}`);
         return;
       }
 
       form.reset();
       setErrorMessage("");
+      toast.success(`✅ Registration successful for ${data.name}`);
       onRegistered();
       onClose();
     } catch (error) {
       setErrorMessage("Network error. Please try again later.");
+      toast.error("⚠️ Network error. Please try again.");
     }
   };
 
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-white/20">
-      <Card className="w-full max-w-md shadow-xl border border-gray-300">
-        <CardHeader>
-          <CardTitle>Register Entry</CardTitle>
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-amber-50/80">
+      <Card className="w-full max-w-md shadow-xl border-amber-200 bg-amber-50">
+        <CardHeader className="border-b border-amber-200">
+          <CardTitle className="text-amber-900">Register Entry</CardTitle>
         </CardHeader>
 
-        {/* 💥 Alert inserted here, right before the form */}
         {errorMessage && (
-          <Alert variant="destructive" className="mx-6 mb-2">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Registration failed</AlertTitle>
-            <AlertDescription>{errorMessage}</AlertDescription>
+          <Alert variant="destructive" className="mx-6 mb-2 bg-amber-100 border-amber-300 text-amber-900">
+            <AlertCircle className="h-4 w-4 text-amber-700" />
+            <AlertTitle className="text-amber-800">Registration failed</AlertTitle>
+            <AlertDescription className="text-amber-700">{errorMessage}</AlertDescription>
           </Alert>
         )}
 
@@ -88,11 +93,15 @@ export default function RegisterModal({ show, onClose, onRegistered }: any) {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel className="text-amber-800">Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Name" {...field} />
+                      <Input 
+                        placeholder="Name" 
+                        {...field} 
+                        className="border-amber-300 focus:ring-amber-500 focus:border-amber-500 bg-amber-50 text-amber-900"
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-amber-600" />
                   </FormItem>
                 )}
               />
@@ -102,11 +111,15 @@ export default function RegisterModal({ show, onClose, onRegistered }: any) {
                 name="userId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>User ID</FormLabel>
+                    <FormLabel className="text-amber-800">User ID</FormLabel>
                     <FormControl>
-                      <Input placeholder="User ID" {...field} />
+                      <Input 
+                        placeholder="User ID" 
+                        {...field} 
+                        className="border-amber-300 focus:ring-amber-500 focus:border-amber-500 bg-amber-50 text-amber-900"
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-amber-600" />
                   </FormItem>
                 )}
               />
@@ -116,21 +129,50 @@ export default function RegisterModal({ show, onClose, onRegistered }: any) {
                 name="laptopBrand"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Laptop Brand</FormLabel>
+                    <FormLabel className="text-amber-800">Laptop Brand</FormLabel>
                     <FormControl>
-                      <Input placeholder="Laptop Brand" {...field} />
+                      <Input 
+                        placeholder="Laptop Brand" 
+                        {...field} 
+                        className="border-amber-300 focus:ring-amber-500 focus:border-amber-500 bg-amber-50 text-amber-900"
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-amber-600" />
+                  </FormItem>
+                )}
+              />
+            
+              <FormField
+                control={form.control}
+                name="department"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-amber-800">Department</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Department" 
+                        {...field} 
+                        className="border-amber-300 focus:ring-amber-500 focus:border-amber-500 bg-amber-50 text-amber-900"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-amber-600" />
                   </FormItem>
                 )}
               />
             </CardContent>
-
-            <CardFooter className="flex justify-between">
-              <Button type="button" variant="outline" onClick={onClose}>
+            <CardFooter className="flex justify-between border-t border-amber-200 pt-6">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onClose}
+                className="border-amber-300 text-amber-800 hover:bg-amber-100 hover:text-amber-900"
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-orange-300 text-white">
+              <Button 
+                type="submit" 
+                className="bg-amber-700 hover:bg-amber-800 text-amber-50"
+              >
                 Submit
               </Button>
             </CardFooter>

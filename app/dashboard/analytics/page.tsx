@@ -221,7 +221,7 @@ export default function AnalyticsDashboard() {
                               : `bg-[${colors.tooltipBg}] border-[${colors.tooltipBorder}] text-[${colors.tooltipText}]`
                           }`}>
                             <p className="font-medium">
-                              {new Date(label).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                              {label ? new Date(label).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown Date'}
                             </p>
                             <p className="flex items-center">
                               <span className="w-3 h-3 rounded-full bg-amber-700 mr-2"></span>

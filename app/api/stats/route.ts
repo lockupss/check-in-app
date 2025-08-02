@@ -25,18 +25,18 @@ export async function GET(request: Request) {
     // Get stats
     const totalUsers = await prisma.user.count();
     
-    const checkedInToday = await prisma.attendance.count({
+    const checkedInToday = await prisma.register.count({
       where: {
-        checkIn: {
+        inTime: {
           gte: startDate,
           lte: adjustedEndDate
         }
       }
     });
 
-    const checkedOutToday = await prisma.attendance.count({
+    const checkedOutToday = await prisma.register.count({
       where: {
-        checkOut: {
+        outTime: {
           gte: startDate,
           lte: adjustedEndDate
         }
@@ -46,13 +46,13 @@ export async function GET(request: Request) {
     // Get chart data (daily activity)
     const dailyActivity = await prisma.$queryRaw`
       SELECT 
-        DATE(checkIn) as date,
-        COUNT(CASE WHEN checkIn IS NOT NULL THEN 1 END) as checkIns,
-        COUNT(CASE WHEN checkOut IS NOT NULL THEN 1 END) as checkOuts
-      FROM Attendance
-      WHERE checkIn >= ${startDate} AND checkIn <= ${adjustedEndDate}
-      GROUP BY DATE(checkIn)
-      ORDER BY DATE(checkIn)
+        DATE("inTime") as date,
+        COUNT(CASE WHEN "inTime" IS NOT NULL THEN 1 END) as checkIns,
+        COUNT(CASE WHEN "outTime" IS NOT NULL THEN 1 END) as checkOuts
+      FROM "Register"
+      WHERE "inTime" >= ${startDate} AND "inTime" <= ${adjustedEndDate}
+      GROUP BY DATE("inTime")
+      ORDER BY DATE("inTime")
     `;
 
     return NextResponse.json({

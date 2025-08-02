@@ -1,8 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
-export async function DELETE(req: Request, { params }: { params: { userId: string } }) {
-  const userId = params.userId;
+export async function DELETE(req: Request, { params }: { params: Promise<{ userId: string }> }) {
+  const { userId } = await params;
 
   try {
     await prisma.register.delete({

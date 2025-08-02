@@ -36,14 +36,14 @@ export async function GET() {
         return prisma.user.upsert({
           where: { email: user.email },
           update: {
-            role: user.role,
+            role: user.role as 'ADMIN' | 'USER',
             password: hashedPassword
           },
           create: {
             email: user.email,
             name: user.name,
             password: hashedPassword,
-            role: user.role
+            role: user.role as 'ADMIN' | 'USER'
           }
         });
       })

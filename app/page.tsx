@@ -365,7 +365,6 @@ export default function Page() {
           <h3 className="text-lg font-semibold mb-2 text-amber-900 dark:text-gray-100">QR Scanner</h3>
           <QrScanner
             onScanSuccess={handleScanSuccess}
-            onClose={() => setScannerOpen(false)}
           />
           {scannedUserId && (
             <div className="mt-3 space-y-2 text-sm text-amber-800 dark:text-gray-300">

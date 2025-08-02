@@ -37,8 +37,7 @@ export default withAuth(
     },
     pages: {
       signIn: "/auth/login",
-      error: "/auth/error",
-      unauthorized: "/auth/unauthorized"
+      error: "/auth/error"
     }
   }
 );

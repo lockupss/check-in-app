@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { 
         message: 'Signup failed',
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );

@@ -27,6 +27,10 @@ export const authOptions: NextAuthOptions = {
           throw new Error("User not found");
         }
 
+        if (!user.password) {
+          throw new Error("User has no password set");
+        }
+
         const isValid = await verifyPassword(
           credentials.password,
           user.password
@@ -89,8 +93,7 @@ export const authOptions: NextAuthOptions = {
     signOut: "/auth/logout",
     error: "/auth/error",
     verifyRequest: "/auth/verify-request",
-    newUser: "/auth/register",
-    unauthorized: "/auth/unauthorized"
+    newUser: "/auth/register"
   },
 
   debug: process.env.NODE_ENV === "development",

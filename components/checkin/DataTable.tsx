@@ -62,8 +62,11 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
-                    {header.isPlaceholder ? null : header.column.columnDef.header &&
-                      header.column.columnDef.header({ column: header.column })}
+                    {header.isPlaceholder ? null : 
+                      typeof header.column.columnDef.header === 'function' 
+                        ? header.column.columnDef.header({ column: header.column, header, table })
+                        : header.column.columnDef.header || header.id
+                    }
                   </TableHead>
                 ))}
               </TableRow>
@@ -76,8 +79,15 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {cell.column.columnDef.cell
-                        ? cell.column.columnDef.cell({ row })
+                      {typeof cell.column.columnDef.cell === 'function'
+                        ? cell.column.columnDef.cell({ 
+                            row, 
+                            cell, 
+                            column: cell.column, 
+                            getValue: cell.getValue, 
+                            renderValue: cell.renderValue, 
+                            table 
+                          })
                         : cell.getValue() as React.ReactNode}
                     </TableCell>
                   ))}

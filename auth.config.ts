@@ -1,6 +1,5 @@
 // auth.config.ts
 //commit1: Configuration for NextAuth authentication
-import type { NextAuthConfig } from "next-auth";
 
 export const authConfig = {
   secret: process.env.AUTH_SECRET,
@@ -10,17 +9,17 @@ export const authConfig = {
     signIn: "/login",
   },
   callbacks: {
-    authorized({ auth }) {
+    authorized({ auth }: { auth: any }) {
       return !!auth?.user;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: any; user: any }) {
       if (user) {
         // Ensure uppercase role
         token.role = user.role?.toUpperCase() || "USER";
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: any }) {
       if (session.user && token.role) {
         // Ensure session role is uppercase
         session.user.role = token.role.toUpperCase();
@@ -28,4 +27,4 @@ export const authConfig = {
       return session;
     },
   },
-} satisfies NextAuthConfig;
+};

@@ -209,8 +209,8 @@ export default function Page() {
                 <Checkbox
                   id={column.id}
                   checked={columnVisibility[column.id as keyof typeof columnVisibility]}
-                  onCheckedChange={(checked) =>
-                    setColumnVisibility({ ...columnVisibility, [column.id]: checked })
+                  onChange={(e) =>
+                    setColumnVisibility({ ...columnVisibility, [column.id]: e.target.checked })
                   }
                 />
                 <label htmlFor={column.id} className="text-sm font-medium leading-none">
@@ -416,7 +416,6 @@ export default function Page() {
           <h3 className="text-lg font-semibold mb-2">QR Scanner</h3>
           <QrScanner
             onScanSuccess={handleScanSuccess}
-            onClose={() => setScannerOpen(false)}
           />
           {scannedUserId && (
             <div className="mt-3 space-y-2 text-sm">
@@ -442,7 +441,7 @@ export default function Page() {
         </div>
       )}
 
-      <Footer className="border-t-2 border-gray-200" />
+      <Footer />
     </div>
   );
 }

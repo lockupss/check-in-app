@@ -54,7 +54,7 @@ export default function DashboardPage() {
       startDate: new Date(),
       endDate: new Date(),
       key: 'selection'
-    }
+    } as any
   ]);
   const [dateFilterApplied, setDateFilterApplied] = useState(false);
 
@@ -340,7 +340,11 @@ export default function DashboardPage() {
                 <div className="absolute right-0 mt-2 z-10 shadow-lg bg-white dark:bg-gray-900 border border-amber-200 dark:border-gray-700 rounded-lg overflow-hidden">
                   <DateRange
                     editableDateInputs={true}
-                    onChange={item => setDateRange([item.selection])}
+                    onChange={item => {
+                      if (item.selection.startDate && item.selection.endDate) {
+                        setDateRange([item.selection]);
+                      }
+                    }}
                     moveRangeOnFirstSelection={false}
                     ranges={dateRange}
                   />

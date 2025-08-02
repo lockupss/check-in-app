@@ -1,9 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
-export async function DELETE(_: Request, { params }: { params: { userId: string } }) {
+export async function DELETE(_: Request, { params }: { params: Promise<{ userId: string }> }) {
   try {
-    const { userId } = params;
+    const { userId } = await params;
 
     const user = await prisma.register.findUnique({ where: { userId } });
 

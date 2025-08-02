@@ -540,7 +540,6 @@ export default function DashboardPage() {
         <UserDetailModal
           user={selectedUser}
           onClose={() => setDetailModalOpen(false)}
-          onDownloadQR={() => downloadQRCode(selectedUser.userId)}
         />
       )}
 

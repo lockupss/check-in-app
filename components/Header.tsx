@@ -51,13 +51,22 @@ export default function Header({
           onClick={() => handleNavigation('/')} 
           className="flex items-center gap-3 hover:opacity-80 transition-opacity"
         >
-          <Image
+          {/*<Image
             src="/chechin-logo.png"
             alt="Logo"
             width={60}
             height={60}
             className="rounded-full border-2 border-amber-400 dark:border-gray-600"
-          />
+          />*/}
+          <Image
+  src="/chechin-logo.png"
+  alt="Logo"
+  width={60}
+  height={60}
+  className="rounded-full border-2 border-amber-400 dark:border-gray-600"
+  priority // Important for above-the-fold images
+/>
+
           <h1 className="text-3xl font-bold text-amber-900 dark:text-gray-100">
             Check-In App
           </h1>

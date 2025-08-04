@@ -36,7 +36,7 @@ interface Register {
   laptopBrand?: string;
   inTime?: string;
   outTime?: string;
-  [key: string]: string | undefined; // More specific than 'any'
+  [key: string]: any;
 }
 
 const QrScanner = dynamic(() => import('@/components/QrScanner'), { ssr: false });
@@ -66,11 +66,9 @@ export default function Page() {
       const data = await res.json();
       setRegisters(data);
       setCurrentPage(1);
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error('Failed to load data');
-        console.error(error.message);
-      }
+    } catch (error: unknown) {
+      toast.error('Failed to load data');
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -96,11 +94,9 @@ export default function Page() {
       } else {
         throw new Error(await res.text());
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(`❌ Failed to ${type} ${userId}`);
-        console.error(error.message);
-      }
+    } catch (error: unknown) {
+      toast.error(`❌ Failed to ${type} ${userId}`);
+      console.error(error);
     }
   };
 
@@ -111,7 +107,8 @@ export default function Page() {
 
   const filteredData = registers.filter(r =>
     Object.values(r).some(
-      (val) => val?.toString().toLowerCase().includes(search.toLowerCase())
+      (val: unknown) => 
+        val?.toString().toLowerCase().includes(search.toLowerCase())
     )
   );
 
@@ -119,16 +116,13 @@ export default function Page() {
     if (!sortConfig) return filteredData;
     
     return [...filteredData].sort((a, b) => {
-      const aValue = a[sortConfig.key];
-      const bValue = b[sortConfig.key];
+      if (a[sortConfig.key] === null || a[sortConfig.key] === undefined) return 1;
+      if (b[sortConfig.key] === null || b[sortConfig.key] === undefined) return -1;
       
-      if (aValue === undefined || aValue === null) return 1;
-      if (bValue === undefined || bValue === null) return -1;
-      
-      if (aValue < bValue) {
+      if (a[sortConfig.key] < b[sortConfig.key]) {
         return sortConfig.direction === 'ascending' ? -1 : 1;
       }
-      if (aValue > bValue) {
+      if (a[sortConfig.key] > b[sortConfig.key]) {
         return sortConfig.direction === 'ascending' ? 1 : -1;
       }
       return 0;
@@ -169,6 +163,7 @@ export default function Page() {
       <RegisterModal show={showModal} onClose={() => setShowModal(false)} onRegistered={reload} />
 
       <main className="flex-1 p-4">
+        {/* Centered filter bar */}
         <div className="flex justify-center mb-6">
           <div className="relative w-full max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

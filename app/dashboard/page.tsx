@@ -8,7 +8,7 @@ import Header from '@/components/Header';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Download, Loader2, Search, X, ArrowUpDown, Eye, Edit, Trash2, LogIn, LogOut, MoreHorizontal, CalendarDays, Filter } from 'lucide-react';
+import { Download, Loader2, Search, X, ArrowUpDown, Eye, Edit, Trash2, LogIn, LogOut, MoreHorizontal, Filter } from 'lucide-react';
 import { formatTime } from '@/lib/utils';
 import {
   Table,
@@ -26,7 +26,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import QRCode from 'react-qr-code';
+//import QRCode from 'react-qr-code';
 import EditUserModal from '@/components/EditUserModal';
 import UserDetailModal from '@/components/UserDetailModal';
 import * as Menubar from '@radix-ui/react-menubar';
@@ -34,27 +34,48 @@ import { DateRange } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 
+// After (define an interface):
+interface User {
+  userId: string;
+  name: string;
+  department?: string;
+  laptopBrand?: string;
+  inTime?: string;
+  outTime?: string;
+}
+
+// After:
+interface DateRange {
+  startDate: Date;
+  endDate: Date;
+  key: string;
+}
+
 export default function DashboardPage() {
+
+  const [registers, setRegisters] = useState<User[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
   const { data: session, status } = useSession();
-  const [registers, setRegisters] = useState<any[]>([]);
+ // const [registers, setRegisters] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(7);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'ascending' | 'descending' } | null>(null);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  //const [selectedUser, setSelectedUser] = useState<any>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   
-  const [dateRange, setDateRange] = useState([
+  const [dateRange, setDateRange] = useState<DateRange[]>([
     {
       startDate: new Date(),
       endDate: new Date(),
       key: 'selection'
-    } as any
+    } 
   ]);
   const [dateFilterApplied, setDateFilterApplied] = useState(false);
 
@@ -93,14 +114,14 @@ export default function DashboardPage() {
     }
   };
 
-  const stats = {
+ {/* const stats = {
     total: registers.length,
     checkedInToday: registers.filter(r => r.inTime?.startsWith(today)).length,
     checkedOutToday: registers.filter(r => r.outTime?.startsWith(today)).length,
     activeNow: registers.filter(r => r.inTime && !r.outTime).length,
-  };
+  };*/}
 
-  const filterByDateRange = (user: any) => {
+  const filterByDateRange = (user: User) => {
     if (!dateFilterApplied) return true;
     
     const startDate = new Date(dateRange[0].startDate);

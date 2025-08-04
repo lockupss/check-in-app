@@ -45,7 +45,7 @@ interface User {
 }
 
 // After:
-interface DateRange {
+interface DateRangeSelection {
   startDate: Date;
   endDate: Date;
   key: string;
@@ -70,7 +70,7 @@ export default function DashboardPage() {
   const [authChecked, setAuthChecked] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   
-  const [dateRange, setDateRange] = useState<DateRange[]>([
+  const [dateRange, setDateRange] = useState<DateRangeSelection[]>([
     {
       startDate: new Date(),
       endDate: new Date(),
@@ -259,7 +259,7 @@ export default function DashboardPage() {
     }
   };
 
-  const downloadQRCode = (userId: string) => {
+ {/* const downloadQRCode = (userId: string) => {
     const svg = document.getElementById(`qr-code-${userId}`);
     const svgData = new XMLSerializer().serializeToString(svg!);
     const canvas = document.createElement('canvas');
@@ -278,7 +278,7 @@ export default function DashboardPage() {
     };
     
     img.src = `data:image/svg+xml;base64,${btoa(svgData)}`;
-  };
+  };*/}
 
   const getStatusBadge = (user: any) => {
     if (!user.inTime) return (

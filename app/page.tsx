@@ -29,11 +29,20 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 
+interface Register {
+  name: string;
+  userId: string;
+  department?: string;
+  laptopBrand?: string;
+  inTime?: string;
+  outTime?: string;
+  [key: string]: any;
+}
 
 const QrScanner = dynamic(() => import('@/components/QrScanner'), { ssr: false });
 
 export default function Page() {
-  const [registers, setRegisters] = useState<any[]>([]);
+  const [registers, setRegisters] = useState<Register[]>([]);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -57,7 +66,7 @@ export default function Page() {
       const data = await res.json();
       setRegisters(data);
       setCurrentPage(1);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to load data');
       console.error(error);
     } finally {
@@ -85,7 +94,7 @@ export default function Page() {
       } else {
         throw new Error(await res.text());
       }
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error(`❌ Failed to ${type} ${userId}`);
       console.error(error);
     }
@@ -98,7 +107,7 @@ export default function Page() {
 
   const filteredData = registers.filter(r =>
     Object.values(r).some(
-      (val: any) => 
+      (val: unknown) => 
         val?.toString().toLowerCase().includes(search.toLowerCase())
     )
   );
@@ -148,7 +157,7 @@ export default function Page() {
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
-     <div className="min-h-screen flex flex-col bg-white dark:bg-black">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-black">
       <Header onOpenRegister={() => setShowModal(true)} />
 
       <RegisterModal show={showModal} onClose={() => setShowModal(false)} onRegistered={reload} />
@@ -292,7 +301,6 @@ export default function Page() {
             </TableBody>
           </Table>
         </div>
-
 
         {!loading && sortedData().length > 0 && (
           <div className="mt-4 flex justify-center">

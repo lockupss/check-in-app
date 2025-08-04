@@ -147,13 +147,16 @@ export default function DashboardPage() {
 
   const sortedData = useCallback(() => {
     if (!sortConfig) return filteredData;
+    
     return [...filteredData].sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
-        return sortConfig.direction === 'ascending' ? -1 : 1;
-      }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
-        return sortConfig.direction === 'ascending' ? 1 : -1;
-      }
+      // Add type check
+      if (!(sortConfig.key in a)) return 0;
+      
+      const valA = a[sortConfig.key as keyof User];
+      const valB = b[sortConfig.key as keyof User];
+      
+      if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
+      if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
       return 0;
     });
   }, [filteredData, sortConfig]);

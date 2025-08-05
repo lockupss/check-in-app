@@ -46,9 +46,9 @@ interface User {
 
 // After:
 interface DateRangeSelection {
-  startDate: Date;
-  endDate: Date;
-  key: string;
+  startDate?: Date;  // Make optional
+  endDate?: Date;    // Make optional
+  key?: string;
 }
 
 export default function DashboardPage() {
@@ -74,8 +74,8 @@ export default function DashboardPage() {
     {
       startDate: new Date(),
       endDate: new Date(),
-      key: 'selection'
-    } 
+      key: 'selection'  // Still provide default key
+    }
   ]);
   const [dateFilterApplied, setDateFilterApplied] = useState(false);
 
@@ -124,6 +124,9 @@ export default function DashboardPage() {
   const filterByDateRange = (user: User) => {
     if (!dateFilterApplied) return true;
     
+    // Add null checks for dateRange and its properties
+    if (!dateRange[0]?.startDate || !dateRange[0]?.endDate) return false;
+    
     const startDate = new Date(dateRange[0].startDate);
     const endDate = new Date(dateRange[0].endDate);
     endDate.setHours(23, 59, 59, 999);
@@ -149,12 +152,15 @@ export default function DashboardPage() {
     if (!sortConfig) return filteredData;
     
     return [...filteredData].sort((a, b) => {
-      // Add type check
-      if (!(sortConfig.key in a)) return 0;
-      
       const valA = a[sortConfig.key as keyof User];
       const valB = b[sortConfig.key as keyof User];
-      
+  
+      // Handle undefined cases
+      if (valA === undefined && valB === undefined) return 0;
+      if (valA === undefined) return 1;  // undefined values go to end
+      if (valB === undefined) return -1; // undefined values go to end
+  
+      // Now TypeScript knows valA and valB are defined
       if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
       if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
       return 0;
@@ -349,29 +355,35 @@ export default function DashboardPage() {
 
           <div className="flex gap-2">
             <div className="relative">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowDatePicker(!showDatePicker)}
-                className={`flex items-center gap-2 border-amber-300 dark:border-gray-300 text-amber-800 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-gray-800 ${dateFilterApplied ? 'bg-amber-50 dark:bg-gray-800' : ''}`}
-              >
-                <Filter className="h-4 w-4 text-amber-600 dark:text-gray-400" />
-                {dateFilterApplied ? 
-                  `${dateRange[0].startDate.toLocaleDateString()} - ${dateRange[0].endDate.toLocaleDateString()}` : 
-                  'Filter by Date'}
-              </Button>
+            <Button 
+  variant="outline" 
+  onClick={() => setShowDatePicker(!showDatePicker)}
+  className={`flex items-center gap-2 border-amber-300 dark:border-gray-300 text-amber-800 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-gray-800 ${dateFilterApplied ? 'bg-amber-50 dark:bg-gray-800' : ''}`}
+>
+  <Filter className="h-4 w-4 text-amber-600 dark:text-gray-400" />
+  {dateFilterApplied && dateRange[0]?.startDate && dateRange[0]?.endDate ? (
+    `${dateRange[0].startDate.toLocaleDateString()} - ${dateRange[0].endDate.toLocaleDateString()}`
+  ) : (
+    'Filter by Date'
+  )}
+</Button>
               
               {showDatePicker && (
                 <div className="absolute right-0 mt-2 z-10 shadow-lg bg-white dark:bg-gray-900 border border-amber-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                  <DateRange
-                    editableDateInputs={true}
-                    onChange={item => {
-                      if (item.selection.startDate && item.selection.endDate) {
-                        setDateRange([item.selection]);
-                      }
-                    }}
-                    moveRangeOnFirstSelection={false}
-                    ranges={dateRange}
-                  />
+                 <DateRange
+  editableDateInputs={true}
+  onChange={item => {
+    if (item.selection.startDate && item.selection.endDate) {
+      setDateRange([{
+        startDate: item.selection.startDate,
+        endDate: item.selection.endDate,
+        key: item.selection.key || 'selection' // Provide fallback for key
+      }]);
+    }
+  }}
+  moveRangeOnFirstSelection={false}
+  ranges={dateRange}
+/>
                   <div className="p-2 flex justify-between border-t border-amber-100 dark:border-gray-700">
                     <Button 
                       variant="ghost" 

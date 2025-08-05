@@ -85,6 +85,7 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       setRegisters(data);
+     
     } catch (error) {
       toast.error('Failed to load data');
       console.error('Fetch error:', error);
@@ -163,7 +164,7 @@ export default function DashboardPage() {
 
   const paginate = (pageNumber: number) => {
     setCurrentPage(pageNumber);
-    toast.success(`Viewing page ${pageNumber} of ${totalPages}`);
+    
   };
 
   const applyDateFilter = () => {
@@ -176,7 +177,7 @@ export default function DashboardPage() {
   const clearDateFilter = () => {
     setDateFilterApplied(false);
     setCurrentPage(1);
-    toast.success('Date filter cleared');
+   
   };
 
   const exportToCSV = async () => {
@@ -239,41 +240,13 @@ export default function DashboardPage() {
         method: 'DELETE',
       });
       if (response.ok) {
-        toast.success('User deleted successfully', { id: toastId });
+        toast.success('User data deleted successfully', { id: toastId });
         reload();
       } else {
-        throw new Error('Failed to delete user');
+        throw new Error('Failed to delete user data');
       }
     } catch (error) {
       toast.error('Failed to delete user');
-      console.error(error);
-    }
-  };
-
-  const downloadQRCode = (userId: string) => {
-    try {
-      toast.loading('Generating QR code...');
-      const svg = document.getElementById(`qr-code-${userId}`);
-      const svgData = new XMLSerializer().serializeToString(svg!);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      
-      img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx?.drawImage(img, 0, 0);
-        const pngFile = canvas.toDataURL('image/png');
-        const downloadLink = document.createElement('a');
-        downloadLink.download = `${userId}-qrcode.png`;
-        downloadLink.href = pngFile;
-        downloadLink.click();
-        toast.success('QR code downloaded');
-      };
-      
-      img.src = `data:image/svg+xml;base64,${btoa(svgData)}`;
-    } catch (error) {
-      toast.error('Failed to download QR code');
       console.error(error);
     }
   };
@@ -341,7 +314,7 @@ export default function DashboardPage() {
                 onClick={() => {
                   setSearch('');
                   setCurrentPage(1);
-                  toast.success('Search cleared');
+                  
                 }}
               />
             )}
@@ -610,32 +583,27 @@ export default function DashboardPage() {
       </div>
 
       {/* Modals */}
-      {detailModalOpen && selectedUser && (
-        <UserDetailModal
-          user={selectedUser}
-          onClose={() => {
-            setDetailModalOpen(false);
-          }}
-          onDelete={() => {
-            handleDelete(selectedUser.userId);
-            setDetailModalOpen(false);
-          }}
-          onEdit={() => {
-            setEditModalOpen(true);
-            setDetailModalOpen(false);
-          }}
-          onDownloadQR={() => {
-            downloadQRCode(selectedUser.userId);
-          }}
-        />
-      )}
-      
+  {detailModalOpen && selectedUser && (
+  <UserDetailModal
+    user={selectedUser}
+    onClose={() => setDetailModalOpen(false)}
+    onDelete={() => {
+      handleDelete(selectedUser.userId);
+      setDetailModalOpen(false);
+    }}
+    onEdit={() => {
+      setEditModalOpen(true);
+      setDetailModalOpen(false);
+    }}
+  />
+)}
       {selectedUser && editModalOpen && (
         <EditUserModal
           user={selectedUser}
           onClose={() => {
             setEditModalOpen(false);
             setSelectedUser(null);
+          
           }}
           onSave={async (updatedUser) => {
             try {
@@ -651,7 +619,7 @@ export default function DashboardPage() {
                 reload();
               } else {
                 const errorData = await res.json();
-                throw new Error(errorData.message || 'Failed to update user data');
+                throw new Error(errorData.message || 'Failed to update user');
               }
             } catch (err) {
               console.error('Update error:', err);

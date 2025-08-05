@@ -18,7 +18,7 @@ function LoginForm() {
 
   const callbackUrl = searchParams.get('callbackUrl') || '/'
 
-  const showToast = (type: 'success' | 'error', message: string) => {
+  const showToast = (type: 'success' | 'error'|'info', message: string) => {
     const toastOptions = {
       style: {
         background: type === 'success' ? '#78350f' : '#7f1d1d',

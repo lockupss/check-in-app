@@ -51,22 +51,13 @@ export default function Header({
           onClick={() => handleNavigation('/')} 
           className="flex items-center gap-3 hover:opacity-80 transition-opacity"
         >
-          {/*<Image
+          <Image
             src="/chechin-logo.png"
             alt="Logo"
             width={60}
             height={60}
             className="rounded-full border-2 border-amber-400 dark:border-gray-600"
-          />*/}
-          <Image
-  src="/chechin-logo.png"
-  alt="Logo"
-  width={60}
-  height={60}
-  className="rounded-full border-2 border-amber-400 dark:border-gray-600"
-  priority // Important for above-the-fold images
-/>
-
+          />
           <h1 className="text-3xl font-bold text-amber-900 dark:text-gray-100">
             Check-In App
           </h1>
@@ -133,7 +124,7 @@ export default function Header({
             className="flex items-center gap-1 border-amber-300 text-amber-800 hover:bg-amber-100 hover:text-amber-900 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-900 dark:hover:text-gray-100"
           >
             <BarChart3 className="h-4 w-4" />
-            Analytics
+           Management
           </Button>
         )}
 

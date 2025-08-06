@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
 import { hashPassword } from '@/lib/auth-utils';
 
 export async function GET() {
+  const prisma = getPrisma();
+  if (!prisma) {
+    return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+  }
+
   // Block in production
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json(

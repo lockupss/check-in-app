@@ -5,22 +5,14 @@ const path = require('path');
 console.log('🚀 Starting build process...');
 
 try {
-  // Step 1: Try to generate Prisma client
-  console.log('📦 Generating Prisma client...');
-  try {
-    execSync('npx prisma generate', { stdio: 'inherit' });
-    console.log('✅ Prisma client generated successfully');
-  } catch (error) {
-    console.log('⚠️  Prisma generation failed, continuing with build...');
-    console.log('This is expected if DATABASE_URL is not available during build');
-  }
-
-  // Step 2: Build Next.js application
+  // Step 1: Build Next.js application (skip Prisma generation during build)
   console.log('🏗️  Building Next.js application...');
+  console.log('📝 Note: Prisma client will be generated at runtime when DATABASE_URL is available');
+  
   execSync('next build', { stdio: 'inherit' });
   console.log('✅ Next.js build completed successfully');
 
-  // Step 3: Verify build artifacts
+  // Step 2: Verify build artifacts
   const nextDir = path.join(process.cwd(), '.next');
   const routesManifest = path.join(nextDir, 'routes-manifest.json');
   

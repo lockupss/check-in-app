@@ -5,6 +5,11 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export async function GET(request: Request) {
+  const prisma = getPrisma();
+  if (!prisma) {
+    return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const startDate = new Date(searchParams.get('start') || '');

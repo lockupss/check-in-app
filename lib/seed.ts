@@ -1,4 +1,4 @@
-import { prisma } from "./prisma";
+import { getPrisma } from "./prisma";
 import { hashPassword } from "./auth-utils";
 
 const ADMIN_USERS = [
@@ -26,6 +26,11 @@ const ADMIN_USERS = [
 ];
 
 export async function seedAdminUsers() {
+  const prisma = getPrisma();
+  if (!prisma) {
+    throw new Error("Database connection not available");
+  }
+  
   for (const user of ADMIN_USERS) {
     await prisma.user.upsert({
       where: { email: user.email },

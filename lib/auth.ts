@@ -1,11 +1,11 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { prisma } from "./prisma";
+import { getPrisma } from "./prisma";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { hashPassword, verifyPassword } from "./auth-utils";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(getPrisma()),
   
   providers: [
     CredentialsProvider({
@@ -19,6 +19,11 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email and password are required");
         }
 
+        const prisma = getPrisma();
+        if (!prisma) {
+          throw new Error("Database connection not available");
+        }
+        
         const user = await prisma.user.findUnique({
           where: { email: credentials.email }
         });

@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
 // Optional: Type the payload for clarity
@@ -7,6 +7,11 @@ interface CheckinPayload {
 }
 
 export async function POST(req: Request) {
+  const prisma = getPrisma();
+  if (!prisma) {
+    return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+  }
+
   try {
     // Parse request
     const { userId }: CheckinPayload = await req.json();

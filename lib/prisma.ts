@@ -1,76 +1,43 @@
-// Conditional import to handle build-time issues
-let PrismaClient: any;
-try {
-  const prismaModule = require('@prisma/client');
-  PrismaClient = prismaModule.PrismaClient;
-} catch (error) {
-  console.warn('Prisma client not available during build');
-  PrismaClient = null;
-}
+// Only import PrismaClient at runtime, not during build
+let prisma: any = null;
 
 // Prevent multiple instances of Prisma Client in development
 declare global {
   var prisma: any;
 }
 
-// Create a mock Prisma client for build time
-const createMockPrismaClient = () => {
-  return {
-    user: {
-      findUnique: async () => null,
-      findMany: async () => [],
-      create: async () => ({}),
-      update: async () => ({}),
-      upsert: async () => ({}),
-      count: async () => 0,
-    },
-    register: {
-      findUnique: async () => null,
-      findMany: async () => [],
-      create: async () => ({}),
-      update: async () => ({}),
-      count: async () => 0,
-    },
-    $queryRaw: async () => [],
-    $disconnect: async () => {},
-  } as any;
-};
-
-// Only create real Prisma client if DATABASE_URL is available and we're not in build mode
-const createPrismaClient = () => {
-  // If PrismaClient is not available, return mock client
-  if (!PrismaClient) {
-    console.warn('PrismaClient not available, using mock client');
-    return createMockPrismaClient();
-  }
+// Create Prisma client only when needed (runtime)
+const getPrismaClient = () => {
+  if (prisma) return prisma;
   
-  // During build time, return mock client
+  // Only create client if we're not in build mode and DATABASE_URL exists
   if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
-    console.warn('DATABASE_URL not found during build, using mock Prisma client');
-    return createMockPrismaClient();
+    console.warn('DATABASE_URL not available, skipping Prisma client creation');
+    return null;
   }
   
   if (!process.env.DATABASE_URL) {
-    console.warn('DATABASE_URL not found, using mock Prisma client');
-    return createMockPrismaClient();
+    console.warn('DATABASE_URL not available, skipping Prisma client creation');
+    return null;
   }
   
   try {
-    return new PrismaClient();
+    const { PrismaClient } = require('@prisma/client');
+    prisma = new PrismaClient();
+    
+    if (process.env.NODE_ENV !== 'production') {
+      global.prisma = prisma;
+    }
+    
+    return prisma;
   } catch (error) {
     console.error('Failed to create Prisma client:', error);
-    return createMockPrismaClient();
+    return null;
   }
 };
 
-const prisma = global.prisma || createPrismaClient();
+// Export a function that returns the client
+export const getPrisma = () => getPrismaClient();
 
-if (process.env.NODE_ENV !== 'production') {
-  global.prisma = prisma;
-}
-
-// Named export
-export { prisma };
-
-// Default export (for compatibility)
-export default prisma;
+// For backward compatibility, export a default that might be null
+export default getPrismaClient();

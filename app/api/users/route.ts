@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
+  const prisma = getPrisma();
+  if (!prisma) {
+    return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+  }
+
   const departments = ['IT', 'HR', 'Finance', 'Marketing', 'Operations'];
   const statuses = ['checked-in', 'checked-out', 'absent'];
   const laptopBrands = ['Dell', 'HP', 'Lenovo', 'Apple', 'Asus'];

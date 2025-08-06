@@ -1,17 +1,18 @@
-import { prisma } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ userId: string }> }) {
-  const { userId } = await params;
-
-  try {
-    await prisma.register.delete({
-      where: { userId },
-    });
-
-    return NextResponse.json({ message: 'Deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting record:', error);
-    return new NextResponse('Error deleting record', { status: 500 });
+export async function DELETE(req: Request, {
+  params,
+}: {
+  params: { userId: string };
+}) {
+  const prisma = getPrisma();
+  if (!prisma) {
+    return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
   }
+
+  const reg = await prisma.register.delete({
+    where: { userId: params.userId },
+  });
+  return NextResponse.json(reg);
 }

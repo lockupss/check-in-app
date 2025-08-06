@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
@@ -7,6 +7,11 @@ export async function POST(req: Request) {
 
   if (!name || !userId || !laptopBrand || !department) {
     return NextResponse.json({ error: 'All fields required' }, { status: 400 });
+  }
+
+  const prisma = getPrisma();
+  if (!prisma) {
+    return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
   }
 
   const exists = await prisma.register.findUnique({ where: { userId } });

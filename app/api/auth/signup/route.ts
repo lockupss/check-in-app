@@ -2,7 +2,7 @@
 //commit1: API route for user signup
 // This file handles user registration and creates a new user in the database
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
 import { hash } from 'bcryptjs';
 
 export async function POST(req: Request) {
@@ -14,6 +14,14 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { message: 'All fields are required' },
         { status: 400 }
+      );
+    }
+
+    const prisma = getPrisma();
+    if (!prisma) {
+      return NextResponse.json(
+        { message: 'Database connection not available' },
+        { status: 503 }
       );
     }
 

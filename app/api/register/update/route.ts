@@ -1,7 +1,12 @@
-import { prisma } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
 export async function PUT(req: Request) {
+  const prisma = getPrisma();
+  if (!prisma) {
+    return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+  }
+
   try {
     const body = await req.json();
     const { originalId, id, name, userId, laptopBrand, department } = body;

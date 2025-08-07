@@ -8,6 +8,9 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   serverExternalPackages: ['@prisma/client'],
+  experimental: {
+    esmExternals: false,
+  },
 }
 
 module.exports = nextConfig

@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postinstall": "npx prisma generate",
+    "deploy": "npx prisma generate && npx prisma db push",
     "seed": "ts-node prisma/seed.ts",
     "start": "next start",
     "lint": "next lint"

@@ -1,26 +1,15 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { redirect } from "next/navigation"
-import  Footer  from "@/components/Footer"
-import  Header  from "@/components/Header"
+import { Footer } from "@/components/footer"
+import { Header } from "@/components/header"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { toast, Toaster } from "sonner"
-import {
-  Download,
-  Loader2,
-  Search,
-  X,
-  ArrowUpDown,
-  Eye,
-  Edit,
-  Trash2,
-  LogIn,
-  LogOut,
-  MoreHorizontal,
-  Filter,
-} from "lucide-react"
+import { Download, Loader2, Search, X, ArrowUpDown, Filter, Calendar, Clock, Users, TrendingUp } from "lucide-react"
 import { formatTime } from "@/lib/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
@@ -31,33 +20,37 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
-import  EditUserModal  from "@/components/EditUserModal"
-
-import  UserDetailModal  from "@/components/UserDetailModal"
-import * as Menubar from "@radix-ui/react-menubar"
 import { DateRange } from "react-date-range"
 import "react-date-range/dist/styles.css"
 import "react-date-range/dist/theme/default.css"
 
-export default function DashboardPage() {
+interface HistoryRecord {
+  id: string
+  userId: string
+  name: string
+  department: string
+  checkInTime: string
+  checkOutTime?: string
+  date: string
+  workingHours?: string
+}
+
+export default function AdminHistoryPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userName, setUserName] = useState("")
-  const [registers, setRegisters] = useState<any[]>([])
+  const [historyData, setHistoryData] = useState<HistoryRecord[]>([])
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(7)
+  const [itemsPerPage] = useState(10)
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "ascending" | "descending" } | null>(null)
-  const [selectedUser, setSelectedUser] = useState<any>(null)
-  const [editModalOpen, setEditModalOpen] = useState(false)
-  const [detailModalOpen, setDetailModalOpen] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
 
   const [dateRange, setDateRange] = useState([
     {
-      startDate: new Date(),
+      startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
       endDate: new Date(),
       key: "selection",
     } as any,
@@ -78,97 +71,149 @@ export default function DashboardPage() {
     }
   }, [])
 
-  const today = new Date().toISOString().slice(0, 10)
-
   useEffect(() => {
     if (authChecked) {
-      reload()
+      loadHistoryData()
     }
   }, [authChecked])
 
-  const reload = async () => {
+  const loadHistoryData = async () => {
     try {
       setLoading(true)
-      // Simulate API call with dummy data
-      const dummyData = [
+      // Simulate API call with comprehensive dummy data
+      const dummyHistory: HistoryRecord[] = [
         {
           id: "1",
-          name: "John Doe",
           userId: "EMP001",
+          name: "John Doe",
           department: "Engineering",
-          laptopBrand: "MacBook Pro",
-          inTime: "2024-01-09T09:30:00Z",
-          outTime: null,
+          checkInTime: "2024-01-09T09:30:00Z",
+          checkOutTime: "2024-01-09T17:30:00Z",
+          date: "2024-01-09",
+          workingHours: "8h 0m",
         },
         {
           id: "2",
-          name: "Jane Smith",
           userId: "EMP002",
+          name: "Jane Smith",
           department: "Design",
-          laptopBrand: "Dell XPS",
-          inTime: "2024-01-09T08:45:00Z",
-          outTime: "2024-01-09T17:30:00Z",
+          checkInTime: "2024-01-09T08:45:00Z",
+          checkOutTime: "2024-01-09T16:45:00Z",
+          date: "2024-01-09",
+          workingHours: "8h 0m",
         },
         {
           id: "3",
-          name: "Mike Johnson",
+          userId: "EMP001",
+          name: "John Doe",
+          department: "Engineering",
+          checkInTime: "2024-01-08T09:15:00Z",
+          checkOutTime: "2024-01-08T18:00:00Z",
+          date: "2024-01-08",
+          workingHours: "8h 45m",
+        },
+        {
+          id: "4",
           userId: "EMP003",
+          name: "Mike Johnson",
           department: "Marketing",
-          inTime: null,
-          outTime: null,
+          checkInTime: "2024-01-08T10:00:00Z",
+          checkOutTime: "2024-01-08T17:00:00Z",
+          date: "2024-01-08",
+          workingHours: "7h 0m",
+        },
+        {
+          id: "5",
+          userId: "EMP002",
+          name: "Jane Smith",
+          department: "Design",
+          checkInTime: "2024-01-07T09:00:00Z",
+          checkOutTime: "2024-01-07T17:30:00Z",
+          date: "2024-01-07",
+          workingHours: "8h 30m",
+        },
+        {
+          id: "6",
+          userId: "EMP004",
+          name: "Sarah Wilson",
+          department: "HR",
+          checkInTime: "2024-01-07T08:30:00Z",
+          checkOutTime: "2024-01-07T16:30:00Z",
+          date: "2024-01-07",
+          workingHours: "8h 0m",
+        },
+        {
+          id: "7",
+          userId: "EMP001",
+          name: "John Doe",
+          department: "Engineering",
+          checkInTime: "2024-01-06T09:45:00Z",
+          checkOutTime: "2024-01-06T18:15:00Z",
+          date: "2024-01-06",
+          workingHours: "8h 30m",
+        },
+        {
+          id: "8",
+          userId: "EMP003",
+          name: "Mike Johnson",
+          department: "Marketing",
+          checkInTime: "2024-01-06T09:30:00Z",
+          date: "2024-01-06",
+          workingHours: "Still working",
         },
       ]
-      setRegisters(dummyData)
+      setHistoryData(dummyHistory)
     } catch (error) {
-      toast.error("Failed to load data")
+      toast.error("Failed to load history data")
       console.error("Fetch error:", error)
     } finally {
       setLoading(false)
     }
   }
 
-  const stats = {
-    total: registers.length,
-    checkedInToday: registers.filter((r) => r.inTime?.startsWith(today)).length,
-    checkedOutToday: registers.filter((r) => r.outTime?.startsWith(today)).length,
-    activeNow: registers.filter((r) => r.inTime && !r.outTime).length,
+  const calculateWorkingHours = (checkIn: string, checkOut?: string) => {
+    if (!checkOut) return "Still working"
+
+    const checkInTime = new Date(checkIn)
+    const checkOutTime = new Date(checkOut)
+    const diffMs = checkOutTime.getTime() - checkInTime.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+
+    return `${diffHours}h ${diffMinutes}m`
   }
 
-  const filterByDateRange = (user: any) => {
+  const filterByDateRange = (record: HistoryRecord) => {
     if (!dateFilterApplied) return true
 
     const startDate = new Date(dateRange[0].startDate)
     const endDate = new Date(dateRange[0].endDate)
     endDate.setHours(23, 59, 59, 999)
 
-    const userInDate = user.inTime ? new Date(user.inTime) : null
-    const userOutDate = user.outTime ? new Date(user.outTime) : null
-
-    return (
-      (userInDate && userInDate >= startDate && userInDate <= endDate) ||
-      (userOutDate && userOutDate >= startDate && userOutDate <= endDate) ||
-      (userInDate && userOutDate && userInDate <= startDate && userOutDate >= endDate)
-    )
+    const recordDate = new Date(record.date)
+    return recordDate >= startDate && recordDate <= endDate
   }
 
-  const filteredData = registers.filter(
-    (r) =>
-      filterByDateRange(r) &&
-      Object.values(r).some((val: any) => val?.toString().toLowerCase().includes(search.toLowerCase())),
+  const filteredData = historyData.filter(
+    (record) =>
+      filterByDateRange(record) &&
+      (record.name.toLowerCase().includes(search.toLowerCase()) ||
+        record.userId.toLowerCase().includes(search.toLowerCase()) ||
+        record.department.toLowerCase().includes(search.toLowerCase())),
   )
 
-  const sortedData = useCallback(() => {
+  const sortedData = () => {
     if (!sortConfig) return filteredData
     return [...filteredData].sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
-        return sortConfig.direction === "ascending" ? -1 : 1
+      const aValue = a[sortConfig.key as keyof HistoryRecord] || ""
+      const bValue = b[sortConfig.key as keyof HistoryRecord] || ""
+      if (sortConfig.direction === "ascending") {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
       }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
-        return sortConfig.direction === "ascending" ? 1 : -1
-      }
-      return 0
     })
-  }, [filteredData, sortConfig])
+  }
 
   const requestSort = (key: string) => {
     let direction: "ascending" | "descending" = "ascending"
@@ -176,7 +221,6 @@ export default function DashboardPage() {
       direction = "descending"
     }
     setSortConfig({ key, direction })
-    toast.success(`Sorted by ${key} ${direction === "ascending" ? "ascending" : "descending"}`)
   }
 
   const getSortIcon = (key: string) => {
@@ -211,23 +255,25 @@ export default function DashboardPage() {
   const clearDateFilter = () => {
     setDateFilterApplied(false)
     setCurrentPage(1)
+    toast.success("Date filter cleared")
   }
 
   const exportToCSV = async () => {
     try {
       setExporting(true)
       toast.loading("Preparing export...")
-      const headers = ["Name", "User ID", "Department", "Laptop Brand", "Check-In", "Check-Out"].join(",")
+      const headers = ["Date", "User ID", "Name", "Department", "Check-In", "Check-Out", "Working Hours"].join(",")
 
-      const rows = filteredData
+      const rows = sortedData()
         .map((item) =>
           [
-            item.name,
+            item.date,
             item.userId,
-            item.department || "General",
-            item.laptopBrand || "-",
-            formatTime(item.inTime),
-            formatTime(item.outTime),
+            item.name,
+            item.department,
+            formatTime(item.checkInTime),
+            item.checkOutTime ? formatTime(item.checkOutTime) : "Not checked out",
+            calculateWorkingHours(item.checkInTime, item.checkOutTime),
           ]
             .map((field) => `"${field || ""}"`)
             .join(","),
@@ -239,7 +285,7 @@ export default function DashboardPage() {
       const url = URL.createObjectURL(blob)
       const link = document.createElement("a")
       link.setAttribute("href", url)
-      link.setAttribute("download", `users_${new Date().toISOString().slice(0, 10)}.csv`)
+      link.setAttribute("download", `admin_history_${new Date().toISOString().slice(0, 10)}.csv`)
       link.style.visibility = "hidden"
       document.body.appendChild(link)
       link.click()
@@ -253,52 +299,12 @@ export default function DashboardPage() {
     }
   }
 
-  const handleCheck = async (userId: string, type: "in" | "out") => {
-    try {
-      const toastId = toast.loading(`Processing ${type === "in" ? "check-in" : "check-out"}...`)
-      // Simulate API call
-      setTimeout(() => {
-        toast.success(`${type === "in" ? "Checked in" : "Checked out"} successfully`, { id: toastId })
-        reload()
-      }, 1000)
-    } catch (error) {
-      toast.error(`Failed to ${type === "in" ? "check-in" : "check-out"}`)
-      console.error(error)
-    }
-  }
-
-  const handleDelete = async (userId: string) => {
-    try {
-      const toastId = toast.loading("Deleting user...")
-      // Simulate API call
-      setTimeout(() => {
-        toast.success("User data deleted successfully", { id: toastId })
-        reload()
-      }, 1000)
-    } catch (error) {
-      toast.error("Failed to delete user")
-      console.error(error)
-    }
-  }
-
-  const getStatusBadge = (user: any) => {
-    if (!user.inTime)
-      return (
-        <div className="inline-flex items-center rounded-full border border-amber-200 dark:border-gray-300 px-2.5 py-0.5 text-xs font-semibold bg-amber-50 dark:bg-gray-100 text-amber-800 dark:text-gray-800">
-          Not Checked In
-        </div>
-      )
-    if (user.inTime && !user.outTime)
-      return (
-        <div className="inline-flex items-center rounded-full border border-transparent px-2.5 py-0.5 text-xs font-semibold bg-amber-700 dark:bg-gray-600 text-white">
-          Checked In
-        </div>
-      )
-    return (
-      <div className="inline-flex items-center rounded-full border border-amber-200 dark:border-gray-300 px-2.5 py-0.5 text-xs font-semibold bg-amber-50 dark:bg-gray-100 text-amber-800 dark:text-gray-800">
-        Checked Out
-      </div>
-    )
+  // Statistics
+  const stats = {
+    totalRecords: filteredData.length,
+    uniqueUsers: new Set(filteredData.map((r) => r.userId)).size,
+    completedSessions: filteredData.filter((r) => r.checkOutTime).length,
+    activeSessions: filteredData.filter((r) => !r.checkOutTime).length,
   }
 
   if (!authChecked) {
@@ -321,8 +327,57 @@ export default function DashboardPage() {
       <div className="flex-1 p-6">
         <div className="flex justify-center items-center mb-6">
           <div className="border border-amber-300 dark:border-gray-300 rounded-md px-6 py-4 shadow-sm dark:shadow-gray-200 bg-white dark:bg-gray-900">
-            <h2 className="text-3xl font-bold text-amber-900 dark:text-gray-300 text-center">Welcome, {userName}</h2>
+            <h2 className="text-3xl font-bold text-amber-900 dark:text-gray-300 text-center">
+              Complete History Dashboard
+            </h2>
           </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mx-4 sm:mx-8 md:mx-12 lg:mx-16 xl:mx-20">
+          <Card className="border border-amber-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-amber-800 dark:text-gray-300">Total Records</CardTitle>
+              <Calendar className="h-4 w-4 text-amber-600 dark:text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-4xl font-bold text-amber-900 dark:text-gray-300">{stats.totalRecords}</div>
+              <p className="text-xs text-amber-600 dark:text-gray-400">Check-in/out records</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-amber-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-amber-800 dark:text-gray-300">Unique Users</CardTitle>
+              <Users className="h-4 w-4 text-amber-600 dark:text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-4xl font-bold text-amber-900 dark:text-gray-300">{stats.uniqueUsers}</div>
+              <p className="text-xs text-amber-600 dark:text-gray-400">Active employees</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-amber-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-amber-800 dark:text-gray-300">Completed</CardTitle>
+              <TrendingUp className="h-4 w-4 text-amber-600 dark:text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-4xl font-bold text-amber-900 dark:text-gray-300">{stats.completedSessions}</div>
+              <p className="text-xs text-amber-600 dark:text-gray-400">Full work sessions</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-amber-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-amber-800 dark:text-gray-300">Active Now</CardTitle>
+              <Clock className="h-4 w-4 text-amber-600 dark:text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-4xl font-bold text-amber-900 dark:text-gray-300">{stats.activeSessions}</div>
+              <p className="text-xs text-amber-600 dark:text-gray-400">Currently working</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Search, Filter and Export */}
@@ -330,7 +385,7 @@ export default function DashboardPage() {
           <div className="relative w-full md:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-500 dark:text-gray-500" />
             <Input
-              placeholder="Filter records..."
+              placeholder="Search by name, user ID, or department..."
               className="pl-10 border-amber-300 dark:border-gray-300 bg-white dark:bg-gray-900 focus-visible:ring-amber-400 dark:focus-visible:ring-gray-400 text-amber-900 dark:text-gray-300"
               value={search}
               onChange={(e) => {
@@ -386,9 +441,7 @@ export default function DashboardPage() {
                     <div className="flex gap-2">
                       <Button
                         variant="ghost"
-                        onClick={() => {
-                          setShowDatePicker(false)
-                        }}
+                        onClick={() => setShowDatePicker(false)}
                         className="text-amber-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-gray-800"
                       >
                         Cancel
@@ -425,9 +478,9 @@ export default function DashboardPage() {
                   <Button
                     variant="ghost"
                     className="text-amber-900 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-gray-700"
-                    onClick={() => requestSort("name")}
+                    onClick={() => requestSort("date")}
                   >
-                    Name {getSortIcon("name")}
+                    Date {getSortIcon("date")}
                   </Button>
                 </TableHead>
                 <TableHead className="text-amber-900 dark:text-gray-300">
@@ -443,135 +496,88 @@ export default function DashboardPage() {
                   <Button
                     variant="ghost"
                     className="text-amber-900 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-gray-700"
+                    onClick={() => requestSort("name")}
+                  >
+                    Name {getSortIcon("name")}
+                  </Button>
+                </TableHead>
+                <TableHead className="text-amber-900 dark:text-gray-300">
+                  <Button
+                    variant="ghost"
+                    className="text-amber-900 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-gray-700"
                     onClick={() => requestSort("department")}
                   >
                     Department {getSortIcon("department")}
                   </Button>
                 </TableHead>
+                <TableHead className="text-amber-900 dark:text-gray-300">
+                  <Button
+                    variant="ghost"
+                    className="text-amber-900 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-gray-700"
+                    onClick={() => requestSort("checkInTime")}
+                  >
+                    Check-In {getSortIcon("checkInTime")}
+                  </Button>
+                </TableHead>
+                <TableHead className="text-amber-900 dark:text-gray-300">
+                  <Button
+                    variant="ghost"
+                    className="text-amber-900 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-gray-700"
+                    onClick={() => requestSort("checkOutTime")}
+                  >
+                    Check-Out {getSortIcon("checkOutTime")}
+                  </Button>
+                </TableHead>
+                <TableHead className="text-amber-900 dark:text-gray-300">Working Hours</TableHead>
                 <TableHead className="text-amber-900 dark:text-gray-300">Status</TableHead>
-                <TableHead className="text-amber-900 dark:text-gray-300">
-                  <Button
-                    variant="ghost"
-                    className="text-amber-900 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-gray-700"
-                    onClick={() => requestSort("inTime")}
-                  >
-                    Check-In {getSortIcon("inTime")}
-                  </Button>
-                </TableHead>
-                <TableHead className="text-amber-900 dark:text-gray-300">
-                  <Button
-                    variant="ghost"
-                    className="text-amber-900 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-gray-700"
-                    onClick={() => requestSort("outTime")}
-                  >
-                    Check-Out {getSortIcon("outTime")}
-                  </Button>
-                </TableHead>
-                <TableHead className="text-amber-900 dark:text-gray-300 w-40">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
+                  <TableCell colSpan={8} className="h-24 text-center">
                     <Loader2 className="mx-auto h-8 w-8 animate-spin text-amber-600 dark:text-gray-500" />
                   </TableCell>
                 </TableRow>
               ) : currentItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center text-amber-800 dark:text-gray-400">
+                  <TableCell colSpan={8} className="h-24 text-center text-amber-800 dark:text-gray-400">
                     {dateFilterApplied ? "No records found for the selected date range" : "No records found"}
                   </TableCell>
                 </TableRow>
               ) : (
-                currentItems.map((user) => (
+                currentItems.map((record) => (
                   <TableRow
-                    key={user.userId}
+                    key={record.id}
                     className="hover:bg-amber-50 dark:hover:bg-gray-800/50 border-b border-amber-200 dark:border-gray-700"
                   >
-                    <TableCell className="font-medium text-amber-900 dark:text-gray-300">{user.name}</TableCell>
-                    <TableCell className="text-amber-800 dark:text-gray-400">{user.userId}</TableCell>
-                    <TableCell className="text-amber-800 dark:text-gray-400">{user.department || "General"}</TableCell>
-                    <TableCell>{getStatusBadge(user)}</TableCell>
+                    <TableCell className="font-medium text-amber-900 dark:text-gray-300">
+                      {new Date(record.date).toLocaleDateString("en-US", {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </TableCell>
+                    <TableCell className="text-amber-800 dark:text-gray-400 font-mono">{record.userId}</TableCell>
+                    <TableCell className="text-amber-800 dark:text-gray-400 font-medium">{record.name}</TableCell>
+                    <TableCell className="text-amber-800 dark:text-gray-400">{record.department}</TableCell>
                     <TableCell className="whitespace-nowrap text-amber-800 dark:text-gray-400">
-                      {formatTime(user.inTime)}
+                      {formatTime(record.checkInTime)}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-amber-800 dark:text-gray-400">
-                      {formatTime(user.outTime)}
+                      {record.checkOutTime ? formatTime(record.checkOutTime) : "-"}
                     </TableCell>
-                    <TableCell className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-amber-300 dark:border-gray-600 text-amber-800 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-gray-700 hover:text-amber-900 dark:hover:text-gray-200 bg-transparent"
-                        onClick={() => {
-                          setSelectedUser(user)
-                          setDetailModalOpen(true)
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-
-                      <Menubar.Root>
-                        <Menubar.Menu>
-                          <Menubar.Trigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-amber-300 dark:border-gray-600 text-amber-800 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-gray-700 hover:text-amber-900 dark:hover:text-gray-200 bg-transparent"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </Menubar.Trigger>
-                          <Menubar.Portal>
-                            <Menubar.Content className="min-w-[220px] bg-white dark:bg-gray-900 rounded-md shadow-lg p-1 z-50 border border-amber-200 dark:border-gray-700">
-                              <Menubar.Item
-                                className="flex items-center px-2 py-1.5 text-sm rounded hover:bg-amber-100 dark:hover:bg-gray-800 cursor-pointer text-amber-900 dark:text-gray-300"
-                                onClick={() => handleCheck(user.userId, "in")}
-                              >
-                                <LogIn className="mr-2 h-4 w-4 text-amber-700 dark:text-gray-400" />
-                                Check In
-                              </Menubar.Item>
-                              <Menubar.Item
-                                className="flex items-center px-2 py-1.5 text-sm rounded hover:bg-amber-100 dark:hover:bg-gray-800 cursor-pointer text-amber-900 dark:text-gray-300"
-                                onClick={() => handleCheck(user.userId, "out")}
-                              >
-                                <LogOut className="mr-2 h-4 w-4 text-amber-700 dark:text-gray-400" />
-                                Check Out
-                              </Menubar.Item>
-                              <Menubar.Separator className="h-px bg-amber-200 dark:bg-gray-700 m-1" />
-                              <Menubar.Item
-                                className="flex items-center px-2 py-1.5 text-sm rounded hover:bg-amber-100 dark:hover:bg-gray-800 cursor-pointer text-amber-900 dark:text-gray-300"
-                                onClick={() => {
-                                  setSelectedUser(user)
-                                  setEditModalOpen(true)
-                                }}
-                              >
-                                <Edit className="mr-2 h-4 w-4 text-amber-700 dark:text-gray-400" />
-                                Edit
-                              </Menubar.Item>
-                              <Menubar.Item
-                                className="flex items-center px-2 py-1.5 text-sm rounded hover:bg-amber-100 dark:hover:bg-gray-800 cursor-pointer text-red-600 hover:text-red-700"
-                                onClick={() => {
-                                  toast.warning(`Are you sure you want to delete ${user.name}?`, {
-                                    action: {
-                                      label: "Delete",
-                                      onClick: () => handleDelete(user.userId),
-                                    },
-                                    cancel: {
-                                      label: "Cancel",
-                                      onClick: () => toast.dismiss(),
-                                    },
-                                  })
-                                }}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </Menubar.Item>
-                            </Menubar.Content>
-                          </Menubar.Portal>
-                        </Menubar.Menu>
-                      </Menubar.Root>
+                    <TableCell className="text-amber-800 dark:text-gray-400 font-medium">
+                      {calculateWorkingHours(record.checkInTime, record.checkOutTime)}
+                    </TableCell>
+                    <TableCell>
+                      {record.checkOutTime ? (
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                          Complete
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">Active</Badge>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
@@ -636,49 +642,6 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
-
-      {/* Modals */}
-      {detailModalOpen && selectedUser && (
-        <UserDetailModal
-          user={selectedUser}
-          isOpen={detailModalOpen}
-          onClose={() => setDetailModalOpen(false)}
-          onEdit={() => {
-            setEditModalOpen(true)
-            setDetailModalOpen(false)
-          }}
-          onDelete={() => {
-            handleDelete(selectedUser.userId)
-            setDetailModalOpen(false)
-          }}
-        />
-      )}
-      {selectedUser && editModalOpen && (
-        <EditUserModal
-          user={selectedUser}
-          isOpen={editModalOpen}
-          onClose={() => {
-            setEditModalOpen(false)
-            setSelectedUser(null)
-          }}
-          onSave={async (updatedUser) => {
-            try {
-              const toastId = toast.loading("Updating user...")
-              // Simulate API call
-              setTimeout(() => {
-                toast.success("User data updated successfully", { id: toastId })
-                reload()
-              }, 1000)
-            } catch (err) {
-              console.error("Update error:", err)
-              toast.error(`Failed to update user: ${err instanceof Error ? err.message : "Unknown error"}`)
-            } finally {
-              setEditModalOpen(false)
-              setSelectedUser(null)
-            }
-          }}
-        />
-      )}
 
       <Footer />
     </div>

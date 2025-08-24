@@ -19,7 +19,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
-export default function RegisterModal({ show, onClose, onRegistered }: any) {
+export default function RegisterModal({ show, onClose, onRegistered, initial, originalId }: any) {
   const [errorMessage, setErrorMessage] = useState("");
 
   const RegisterSchema = z.object({
@@ -34,24 +34,58 @@ export default function RegisterModal({ show, onClose, onRegistered }: any) {
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
-      name: "",
-      userId: "",
-      laptopBrand: "",
-      department: "General",
+  name: initial?.name || "",
+  userId: initial?.userId || "",
+  laptopBrand: initial?.laptopBrand || "",
+  department: initial?.department || "General",
     },
   });
 
   const onSubmit = async (data: RegisterFormValues) => {
     try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      let res: Response | null = null
+      if (originalId) {
+        // Update existing register
+        res = await fetch('/api/register/update', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ originalId, ...data }),
+        })
+      } else {
+        res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        })
+      }
 
       if (!res.ok) {
-        const body = await res.json();
-        const msg = body?.message || "Something went wrong while registering. Maybe userId already exists";
+        // Try to read error body; if DB not available (503) or other error, fallback to localStorage
+        let body: any = null
+        try { body = await res.json(); } catch (e) { /* noop */ }
+        const msg = body?.message || body?.error || "Something went wrong while registering. Falling back to local storage."
+        // If server returned 503 or similar, persist locally so the UI still works in dev without a DB
+        if (res.status === 503 || res.status === 500) {
+          const local = JSON.parse(localStorage.getItem('local-registers') || '[]') as any[]
+          const record = {
+            id: `local-${Date.now()}`,
+            name: data.name,
+            userId: data.userId,
+            laptopBrand: data.laptopBrand,
+            department: data.department,
+            inTime: null,
+            outTime: null,
+          }
+          local.push(record)
+          localStorage.setItem('local-registers', JSON.stringify(local))
+          form.reset()
+          setErrorMessage("")
+          toast.success(`✅ Registered locally for ${data.name}`)
+          onRegistered && onRegistered(record)
+          onClose && onClose()
+          return
+        }
+
         setErrorMessage(msg);
         toast.error(`❌ Registration failed: ${msg}`);
         return;
@@ -60,11 +94,32 @@ export default function RegisterModal({ show, onClose, onRegistered }: any) {
       form.reset();
       setErrorMessage("");
       toast.success(`✅ Registration successful for ${data.name}`);
-      onRegistered();
+      // Prefer to call onRegistered with the created/updated record when available
+      try {
+        const created = await res.json().catch(() => null)
+        onRegistered && onRegistered(created)
+      } catch (e) {
+        onRegistered && onRegistered()
+      }
       onClose();
     } catch (error) {
-      setErrorMessage("Network error. Please try again later.");
-      toast.error("⚠️ Network error. Please try again.");
+      // Network error: fallback to local storage
+      setErrorMessage("Network error. Saved locally.");
+      const local = JSON.parse(localStorage.getItem('local-registers') || '[]') as any[]
+      const record = {
+        id: `local-${Date.now()}`,
+        name: data.name,
+        userId: data.userId,
+        laptopBrand: data.laptopBrand,
+        department: data.department,
+        inTime: null,
+        outTime: null,
+      }
+      local.push(record)
+      localStorage.setItem('local-registers', JSON.stringify(local))
+      toast.success(`✅ Registered locally for ${data.name}`)
+      onRegistered && onRegistered(record)
+      onClose && onClose()
     }
   };
 

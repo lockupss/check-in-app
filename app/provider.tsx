@@ -1,8 +1,8 @@
 // app/providers.tsx
 'use client';
-
 import { SessionProvider } from 'next-auth/react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  // Wrap app with NextAuth SessionProvider so client hooks can read session state
   return <SessionProvider>{children}</SessionProvider>;
 }

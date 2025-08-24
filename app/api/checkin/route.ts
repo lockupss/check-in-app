@@ -1,5 +1,6 @@
 import { getPrisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
+//commit1:
 
 // Optional: Type the payload for clarity
 interface CheckinPayload {
@@ -7,11 +8,6 @@ interface CheckinPayload {
 }
 
 export async function POST(req: Request) {
-  const prisma = getPrisma();
-  if (!prisma) {
-    return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
-  }
-
   try {
     // Parse request
     const { userId }: CheckinPayload = await req.json();
@@ -24,20 +20,19 @@ export async function POST(req: Request) {
       );
     }
 
+    const prisma = getPrisma();
+    if (!prisma) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
     // Ensure user exists
     const existingUser = await prisma.register.findUnique({ where: { userId } });
     if (!existingUser) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     // Update check-in time
-    const updated = await prisma.register.update({
-      where: { userId },
-      data: { inTime: new Date() },
-    });
+    const updated = await prisma.register.update({ where: { userId }, data: { inTime: new Date() } });
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error) {

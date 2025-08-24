@@ -1,47 +1,43 @@
-import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
-//commit1: Middleware to protect the admin dashboard and ensure only authenticated users can access it
+import type { NextRequest } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
-export default withAuth(
-  function middleware(request) {
-    // Admin path protection
-    if (request.nextUrl.pathname.startsWith("/dashboard")) {
-      const token = request.nextauth?.token;
-      
-      // Debug logging
-      console.log(`[Middleware] Path: ${request.nextUrl.pathname}`);
-      console.log(`[Middleware] Role: ${token?.role}`);
-      
-      // 1. Handle unauthenticated users
-      if (!token) {
-        const loginUrl = new URL("/auth/login", request.url);
-        loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
-        return NextResponse.redirect(loginUrl);
-      }
+// Protect application routes: allow public paths (/, /auth/*, /api/*, _next, static)
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl
 
-      // 2. Handle non-admin users with consistent uppercase check
-      if (token.role?.toUpperCase() !== "ADMIN") {
-        console.log(`[Middleware] Unauthorized access attempt by ${token.email}`);
-        const unauthorizedUrl = new URL("/auth/unauthorized", request.url);
-        unauthorizedUrl.searchParams.set("from", request.nextUrl.pathname);
-        return NextResponse.rewrite(unauthorizedUrl);
-      }
-    }
-
-    return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ token }) => !!token,
-    },
-    pages: {
-      signIn: "/auth/login",
-      error: "/auth/error"
-    }
+  // Allow public and static routes
+  if (
+    pathname === '/' ||
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/static') ||
+    pathname === '/favicon.ico'
+  ) {
+    return NextResponse.next()
   }
-);
+
+  // Try to get NextAuth token (returns null if not present)
+  let token = null
+  try {
+    token = await getToken({ req, secret: process.env.AUTH_SECRET })
+  } catch (err) {
+    // ignore errors and treat as unauthenticated
+    token = null
+  }
+
+  if (!token) {
+    // Redirect unauthenticated users to the public landing page, preserving callback
+    const url = req.nextUrl.clone()
+    url.pathname = '/'
+    url.searchParams.set('callbackUrl', pathname)
+    return NextResponse.redirect(url)
+  }
+
+  return NextResponse.next()
+}
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
-};
+  matcher: ['/((?!_next|api|auth|static|favicon.ico).*)'],
+}

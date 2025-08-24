@@ -6,7 +6,7 @@ export const authConfig = {
   providers: [],
   trustHost: true,
   pages: {
-    signIn: "/login",
+    signIn: "/auth/login",
   },
   callbacks: {
     authorized({ auth }: { auth: any }) {

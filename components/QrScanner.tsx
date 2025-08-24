@@ -5,13 +5,15 @@ import { toast } from 'sonner'; // For feedback to users
 
 interface QrScannerProps {
   onScanSuccess: (userId: string) => void;
+  boxSize?: number;
+  className?: string;
 }
 
-export default function QrScanner({ onScanSuccess }: QrScannerProps) {
+export default function QrScanner({ onScanSuccess, boxSize = 250, className = '' }: QrScannerProps) {
   useEffect(() => {
     const scanner = new Html5QrcodeScanner(
       'qr-reader',
-      { fps: 10, qrbox: 250 },
+      { fps: 10, qrbox: boxSize },
       false
     );
 

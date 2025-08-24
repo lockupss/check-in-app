@@ -73,9 +73,18 @@ export default function Page() {
   const reload = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/register/all');
-      const data = await res.json();
-      setRegisters(data);
+      let data: any[] = []
+      try {
+        const res = await fetch('/api/register/all');
+        if (res.ok) data = await res.json();
+      } catch (err) {
+        console.warn('Failed to fetch server registers, using local fallback if present', err);
+        data = [];
+      }
+
+      let local: any[] = []
+      try { local = JSON.parse(localStorage.getItem('local-registers') || '[]') } catch (e) { local = [] }
+      setRegisters([...(data || []), ...local]);
       setCurrentPage(1);
     } catch (error) {
       toast.error('Failed to load data');

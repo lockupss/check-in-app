@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
@@ -15,9 +14,16 @@ import {
 } from '@/components/ui/card';
 
 export default function AnalyticsDashboard() {
-  const { data: session } = useSession();
+  // use server/client session
+  const { useAuth } = require('@/hooks/useAuth');
+  const { user, loading: authLoading } = useAuth();
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading) setAuthChecked(true);
+  }, [authLoading]);
   const [registers, setRegisters] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [chartData, setChartData] = useState<any[]>([]);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -25,6 +31,7 @@ export default function AnalyticsDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setDataLoading(true);
         const res = await fetch('/api/register/all');
         if (!res.ok) throw new Error('Failed to fetch');
         const data = await res.json();
@@ -33,11 +40,11 @@ export default function AnalyticsDashboard() {
       } catch (error) {
         console.error('Fetch error:', error);
       } finally {
-        setLoading(false);
+        setDataLoading(false);
       }
     };
-    fetchData();
-  }, []);
+    if (authChecked) fetchData();
+  }, [authChecked]);
 
   const processChartData = (data: any[]) => {
     const dateMap = new Map<string, { checkIns: number, checkOuts: number }>();
@@ -132,6 +139,29 @@ export default function AnalyticsDashboard() {
       <Header />
       
       <div className="max-w-7xl mx-auto">
+        {/* Admin promote tool */}
+        <div className="mb-6 p-4 border rounded bg-amber-50 dark:bg-gray-900">
+          <h3 className="font-semibold mb-2">Admin tools</h3>
+          <p className="text-sm text-amber-700 dark:text-gray-400">Promote a user to admin by email (creates the user if missing).</p>
+          <div className="mt-3 flex gap-2">
+            <input id="promoteEmail" placeholder="user@example.com" className="border px-2 py-1 rounded flex-1" />
+            <Button onClick={async () => {
+              const el: any = document.getElementById('promoteEmail')
+              const email = el?.value?.trim()
+              if (!email) return alert('Email required')
+              try {
+                const res = await fetch('/api/users/promote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) })
+                if (!res.ok) {
+                  const t = await res.text().catch(() => 'Failed')
+                  return alert('Error: ' + t)
+                }
+                alert('Promoted to admin')
+                el.value = ''
+                try { location.reload() } catch (e) {}
+              } catch (e) { alert('Network error') }
+            }}>Promote</Button>
+          </div>
+        </div>
         <h2 className={`text-3xl font-bold ${colors.textPrimary} mb-8`}>Dashboard Analytics</h2>
 
         {/* Stats Cards */}
@@ -141,7 +171,7 @@ export default function AnalyticsDashboard() {
               <CardTitle className={colors.textSecondary}>Total Users</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className={`text-4xl font-bold ${colors.textPrimary}`}>{loading ? '...' : stats.total}</p>
+          <p className={`text-4xl font-bold ${colors.textPrimary}`}>{dataLoading ? '...' : stats.total}</p>
             </CardContent>
           </Card>
 
@@ -150,7 +180,7 @@ export default function AnalyticsDashboard() {
               <CardTitle className={colors.textSecondary}>Active Today</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className={`text-4xl font-bold ${colors.textPrimary}`}>{loading ? '...' : stats.checkedInToday}</p>
+          <p className={`text-4xl font-bold ${colors.textPrimary}`}>{dataLoading ? '...' : stats.checkedInToday}</p>
               <p className={`text-sm ${colors.textTertiary}`}>Checked in</p>
             </CardContent>
           </Card>
@@ -160,7 +190,7 @@ export default function AnalyticsDashboard() {
               <CardTitle className={colors.textSecondary}>Currently Active</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className={`text-4xl font-bold ${colors.textPrimary}`}>{loading ? '...' : stats.activeNow}</p>
+          <p className={`text-4xl font-bold ${colors.textPrimary}`}>{dataLoading ? '...' : stats.activeNow}</p>
               <p className={`text-sm ${colors.textTertiary}`}>In the building</p>
             </CardContent>
           </Card>
@@ -170,7 +200,7 @@ export default function AnalyticsDashboard() {
               <CardTitle className={colors.textSecondary}>Checked Out</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className={`text-4xl font-bold ${colors.textPrimary}`}>{loading ? '...' : stats.checkedOutToday}</p>
+          <p className={`text-4xl font-bold ${colors.textPrimary}`}>{dataLoading ? '...' : stats.checkedOutToday}</p>
               <p className={`text-sm ${colors.textTertiary}`}>Today</p>
             </CardContent>
           </Card>
@@ -257,7 +287,7 @@ export default function AnalyticsDashboard() {
             ) : (
               <div className="h-full flex items-center justify-center">
                 <p className={colors.textTertiary}>
-                  {loading ? 'Loading data...' : 'No chart data available'}
+            {dataLoading ? 'Loading data...' : 'No chart data available'}
                 </p>
               </div>
             )}

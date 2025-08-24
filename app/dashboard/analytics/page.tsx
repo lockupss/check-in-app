@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
 import { useEffect, useState, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import { Input } from '@/components/ui/input';
@@ -35,10 +35,21 @@ import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading) setAuthChecked(true);
+  }, [authLoading]);
+
+  useEffect(() => {
+    if (authChecked && !user) router.push('/');
+  }, [authChecked, user, router]);
+
   const [registers, setRegisters] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(7);
@@ -46,7 +57,6 @@ export default function DashboardPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   
   const [dateRange, setDateRange] = useState([
@@ -58,17 +68,7 @@ export default function DashboardPage() {
   ]);
   const [dateFilterApplied, setDateFilterApplied] = useState(false);
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      redirect('/auth/login?callbackUrl=/dashboard');
-    } else if (status === 'authenticated') {
-      if (session?.user?.role?.toUpperCase() === 'ADMIN') {
-        setAuthChecked(true);
-      } else {
-        redirect('/');
-      }
-    }
-  }, [status, session]);
+  // authChecked is handled by authLoading effect
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -80,7 +80,7 @@ export default function DashboardPage() {
 
   const reload = async () => {
     try {
-      setLoading(true);
+  setDataLoading(true);
       const res = await fetch('/api/register/all');
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
@@ -90,7 +90,7 @@ export default function DashboardPage() {
       toast.error('Failed to load data');
       console.error('Fetch error:', error);
     } finally {
-      setLoading(false);
+  setDataLoading(false);
     }
   };
 
@@ -269,7 +269,7 @@ export default function DashboardPage() {
     );
   };
 
-  if (status === 'loading' || !authChecked) {
+  if (authLoading || !authChecked || dataLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-white dark:bg-black">
         <Header />
@@ -290,7 +290,7 @@ export default function DashboardPage() {
         <div className="flex justify-center items-center mb-6">
           <div className="border border-amber-300 dark:border-gray-300 rounded-md px-6 py-4 shadow-sm dark:shadow-gray-200 bg-white dark:bg-gray-900">
             <h2 className="text-3xl font-bold text-amber-900 dark:text-gray-300 text-center">
-              Welcome, {session?.user?.name || session?.user?.email}
+              Welcome, {user?.name || user?.email || 'Guest'}
             </h2>
           </div>
         </div>
@@ -427,7 +427,7 @@ export default function DashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
+              {dataLoading ? (
                 <TableRow>
                   <TableCell colSpan={7} className="h-24 text-center">
                     <Loader2 className="mx-auto h-8 w-8 animate-spin text-amber-600 dark:text-gray-500" />
@@ -534,7 +534,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Pagination */}
-        {!loading && sortedData().length > 0 && (
+  {!dataLoading && sortedData().length > 0 && (
           <div className="mt-6 flex justify-center">
             <Pagination>
               <PaginationContent>
